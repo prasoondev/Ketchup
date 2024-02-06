@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player with Output Settings</title>
+</head>
+<body>
+
+<video id="myVideo" width="640" height="360" controls>
+    <source src="test.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+</video>
+
+<button onclick="addBackgroundMusic()">Add Background Music</button>
+<button onclick="selectOutputSettings()">Select Output Settings</button>
+
+<audio id="backgroundMusic" loop>
+    <source src="background_music.mp3" type="audio/mp3">
+    Your browser does not support the audio tag.
+</audio>
+
+<script>
+    function addBackgroundMusic() {
+        var video = document.getElementById("myVideo");
+        var backgroundMusic = document.getElementById("backgroundMusic");
+
+        if (video.paused) {
+            video.play();
+            backgroundMusic.play();
+        } else {
+            video.pause();
+            backgroundMusic.pause();
+        }
+    }
+
+    function selectOutputSettings() {
+        var video = document.getElementById("myVideo");
+
+        // Prompt user for resolution, quality, image duration, and transition effect
+        var resolution = prompt("Enter desired video resolution (e.g., 640x360):");
+        var quality = prompt("Enter desired video quality (e.g., 0.8 for 80% quality):");
+        var imageDuration = prompt("Enter the duration for each image in seconds:");
+        var transitionEffect = prompt("Enter the transition effect (e.g., fade, slide):");
+
+        if (resolution && quality && imageDuration && transitionEffect) {
+            // Create a canvas element and set its dimensions
+            var canvas = document.createElement("canvas");
+            canvas.width = parseInt(resolution.split("x")[0]);
+            canvas.height = parseInt(resolution.split("x")[1]);
+
+            // Get the canvas context
+            var context = canvas.getContext("2d");
+
+            // Draw the video frame onto the canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Convert the canvas content to a data URL
+            var dataURL = canvas.toDataURL("image/jpeg", quality);
+
+            // Create a new video element with the captured frame and transition effect
+            var newVideo = document.createElement("video");
+            newVideo.src = dataURL;
+            newVideo.controls = true;
+            newVideo.setAttribute("duration", imageDuration);
+            newVideo.setAttribute("data-transition", transitionEffect);
+
+            // Replace the existing video with the new video
+            video.parentNode.replaceChild(newVideo, video);
+        }
+    }
+</script>
+
+</body>
+</html>

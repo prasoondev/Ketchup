@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <title>Login/Register Page</title>
+    <link rel='stylesheet' href='index.css'>
+</head>
+<body>
+    <div class='container'>
+        <form id='loginForm' style='display: block;'>
+            <h2>Login</h2>
+            <input type='text' placeholder='Username' id='login-username' required>
+            <input type='password' placeholder='Password' id='login-password' required>
+            <button type='submit'>Login</button>
+            <div id='invalid-username' class='invalid-username' style='display: none;'>
+                Incorrect username/password.
+            </div>
+        </form>
+
+        <!-- To not show register first -->
+        <form id='registerForm' style='display: none;'>
+            <h2>Register</h2>
+            <input type='text' placeholder='Username' id='register-username' required>
+            <input type='password' placeholder='Password' id='register-password' required>
+            <ul>
+                <li id = 'register-username-unique' class='register-username-unique'> Username should be unique </li>
+                <li id = 'register-password-length' class='register-password-length'> Password must be atleast 8 characters long </li>
+                <li id = 'register-password-number' class='register-password-number'> Password must contain atleast 1 numeric character </li>
+                <li id = 'register-password-capital' class='register-password-capital'> Password must contain atleast 1 capital letter </li>
+                <li id = 'register-password-special' class='register-password-special'> Password must contain atleast 1 special character </li>
+            </ul>
+            <button type='submit'>Register</button>
+        </form>
+
+        <div class='switch'>
+            <p> Don't have an account? <a href='#' id='switchForm'>Register</a></p>
+            <p><a href='#' id='adminForm'>Admin Login</a></p>
+            <p style='display: none;'> Already have an account? <a href='#' id='switchForm'>Login</a></p>
+        </div>
+    </div>
+    <script src='index.js'></script>
+</body>
+</html>
