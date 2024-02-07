@@ -23,7 +23,10 @@ npm install bcrypt
 
 To run the server, run node server.js with the directory where all the files are stored.
 
-
 ### Admin Login Details 
 username: admninadmin
 password: Abcd1234@
+
+### Notes
+- Use admin credentials to login
+- Using the register command crashes the server which will be fixed in Milestone 2. 
