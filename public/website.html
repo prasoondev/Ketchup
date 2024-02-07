@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>File Upload</title>
+  <title>Video Editor</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -35,16 +36,8 @@
 
     #add-files-btn,
     #select-files-btn,
-    #clear-selection-btn {
-      margin-top: 10px;
-      cursor: pointer;
-      padding: 10px;
-      background-color: #4caf50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-    }
-    #video-btn {
+    #clear-selection-btn,
+    #create-video-btn {
       margin-top: 10px;
       cursor: pointer;
       padding: 10px;
@@ -67,14 +60,28 @@
       background-color: #e7f3e7;
     }
 
+    .preview-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      margin-top: 20px;
+    }
+
+    .preview-image {
+      height: 200px;
+      width: auto;
+      margin: 5px;
+    }
+
     #video-player {
       margin-top: 20px;
     }
   </style>
 </head>
+
 <body>
 
-  <h2>File Upload</h2>
+  <h2>File Upload, Images, and Video Preview</h2>
 
   <div id="drop-area" ondrop="handleDrop(event)" ondragover="handleDragOver(event)">
     <p>Drag and drop files here or click to select files</p>
@@ -84,11 +91,13 @@
   <button id="add-files-btn" onclick="openFileInput()">Add Files</button>
   <button id="select-files-btn" onclick="selectFiles()">Select Files</button>
   <button id="clear-selection-btn" onclick="clearSelection()">Clear Selection</button>
-  <button id="video-btn" onclick="getVideo()">Get Video</button>
+  <button id="create-video-btn" onclick="createVideo()">Create Video</button>
 
   <ul id="file-list"></ul>
 
   <ul id="selected-file-list"></ul>
+
+  <div class="preview-container" id="image-preview"></div>
 
   <div id="video-player">
     <h2>Video Preview</h2>
@@ -111,6 +120,7 @@
 
     function handleFiles(files) {
       const fileList = document.getElementById('file-list');
+      const imagePreview = document.getElementById('image-preview');
 
       for (const file of files) {
         const listItem = document.createElement('li');
@@ -125,6 +135,12 @@
         listItem.appendChild(fileName);
         listItem.appendChild(fileSize);
         fileList.appendChild(listItem);
+
+        // Create image element for preview
+        const imageElement = document.createElement('img');
+        imageElement.src = URL.createObjectURL(file);
+        imageElement.className = 'preview-image';
+        imagePreview.appendChild(imageElement);
       }
     }
 
@@ -165,10 +181,46 @@
       const selectedFileList = document.getElementById('selected-file-list');
       selectedFileList.innerHTML = '';
     }
-    function getVideo() {
-      window.location.href = 'test.html';
+
+    function createVideo() {
+      window.location.href ="test.html";
+      // const selectedFileList = document.getElementById('selected-file-list');
+
+      // // Extract selected file names
+      // const selectedFiles = Array.from(selectedFileList.children).map(item => item.textContent.trim());
+
+      // // Send selected file names to the server for video creation
+      // fetch('/create_video', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //   },
+      //   body: JSON.stringify({
+      //     files: selectedFiles,
+      //   }),
+      // })
+      //   .then(response => response.json())
+      //   .then(data => {
+      //     console.log('Video created:', data.video_filename);
+
+      //     // Assuming the server responds with the created video filename
+      //     const videoElement = document.createElement('video');
+      //     videoElement.width = 640;
+      //     videoElement.height = 480;
+      //     videoElement.controls = true;
+
+      //     const sourceElement = document.createElement('source');
+      //     sourceElement.src = '{{ url_for("static", filename="videos/") }}' + data.video_filename;
+      //     sourceElement.type = 'video/mp4';
+
+      //     videoElement.appendChild(sourceElement);
+
+      //     document.body.appendChild(videoElement);
+      //   })
+      //   .catch(error => console.error('Error creating video:', error));
     }
   </script>
 
 </body>
+
 </html>

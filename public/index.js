@@ -1,3 +1,19 @@
+function changeCSS(cssFile, cssLinkIndex) {
+
+    var oldlink = document.getElementsByTagName("link").item(cssLinkIndex);
+
+    var newlink = document.createElement("link");
+    newlink.setAttribute("rel", "stylesheet");
+    newlink.setAttribute("type", "text/css");
+    newlink.setAttribute("href", cssFile);
+
+    document.getElementsByTagName("head").item(cssLinkIndex).replaceChild(newlink, oldlink);
+}
+function myfunction(){
+    document.getElementById("containerlogin").style.display="flex";
+    document.getElementById("home").style.display="none";
+    changeCSS('index.css', 0);
+}
 document.addEventListener('DOMContentLoaded', function() {
     let loginFormId = document.getElementById('loginForm');
     let registerFormId = document.getElementById('registerForm');

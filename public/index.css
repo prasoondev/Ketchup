@@ -8,8 +8,7 @@ body {
     justify-content: center;
     height: 100vh;
 }
-
-.container {
+.container1 {
     background-color: #636363;
     border-radius: 8px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -17,6 +16,14 @@ body {
     width: 300px;
     text-align: center;
     color: #fff;
+    font-family: sans-serif;
+    background-color: #000000;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
 }
 
 input {
@@ -40,12 +47,12 @@ button:hover {
     background-color: #4CAF50;
 }
 
-.switch {
+.switch1 {
     margin-top: 10px;
     text-align: center;
 }
 
-.switch a {
+.switch1 a {
     text-decoration: underline;
     color: #4CAF50;
     cursor: pointer;
