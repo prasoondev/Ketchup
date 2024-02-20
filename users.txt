@@ -1,0 +1,1 @@
+[{"username": "abcd", "password": "$2b$12$BJQYgfhFFcauNFqC/heEAevV07HpXTnuxN2jbRDWaBhCCDCGpgegq"}, {"username": "admin", "password": "$2b$12$/lceUeWsswuPVhhpUyoic.HFcpPYGcnA2vOTQdC/7siDvQxULXqOi"}, {"username": "ags", "password": "$2b$12$qEtEFT6rNPRFkSoENjrEZOg185.q6diku4AjAPPKMtMJwPJHmCJKm"}]
