@@ -1,2 +1,0 @@
-abcd:$2b$10$D/s5YtuIkZX9KzbF.YuMaewnIzij7JS9lmjjE.8gLvK4W9H.eDwwm
-adminadmin:$2b$10$EWttIilvPimPMaAFWBY2nOiWLiDT7UYbBiAlaRyDh9hHkndGr4.9C
