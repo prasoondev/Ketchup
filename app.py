@@ -7,6 +7,10 @@ import datetime
 import mysql.connector
 from mysql.connector import Error
 import base64
+import secrets
+import hashlib
+
+secret_key = secrets.token_hex(32)
 
 app = Flask(__name__)
 app.config['MYSQL_HOST'] = 'localhost'
@@ -15,7 +19,7 @@ app.config['MYSQL_PASSWORD'] = '123'
 app.config['MYSQL_DB'] = 'project'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 app.secret_key = 'secret_key_for_flash_messages'
-app.config['SECRET_KEY'] = '$%#GJdjsklwJLqwn321QDdjaA'
+app.config['SECRET_KEY'] = secret_key
 mysql = MySQL(app)
 bcrypt = Bcrypt(app)
 
@@ -30,6 +34,9 @@ def login_required(f):
 
 @app.route("/")
 def form():
+    username = session.get('username')
+    if username:
+        return redirect('/website')  # Redirect to login if username is not in session
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM UserDetails WHERE UserName = %s", ('admin',))
     admin_user = cur.fetchone()
@@ -178,16 +185,29 @@ def upload_page():
 
         user_id = user['UserId']
 
+        # Calculate hash value of the image data
+        image_data = file.read()
+        image_hash = hashlib.sha256(image_data).hexdigest()
+
         try:
-            cursor.execute("INSERT INTO UserImages (UserId, ImageData) VALUES (%s, %s)", (user_id, file.read(),))
+            # Check if the image hash already exists in ImageMetadata column of UserImages table
+            cursor.execute("SELECT * FROM UserImages WHERE ImageMetadata = %s", (image_hash,))
+            existing_image = cursor.fetchone()
+            if existing_image:
+                flash('You have already uploaded this image.', 'error')
+                return redirect('/website')
+
+            # Insert image data and metadata into UserImages table
+            cursor.execute("INSERT INTO UserImages (UserId, ImageMetadata, ImageData) VALUES (%s, %s, %s)", (user_id, image_hash, image_data))
             mysql.connection.commit()
+
             return redirect('/website')
         except Error as e:
             print(f"The error '{e}' occurred")
             return 'An error occurred while uploading the image'
 
-
     return render_template('upload.html')
+
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
@@ -201,5 +221,3 @@ def logout():
 
 if __name__=='__main__':
     app.run(debug=True)
-
-
