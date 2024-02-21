@@ -48,6 +48,16 @@ password: Abcd1234@
 | UserImages   | varchar(255) | YES  |     | NULL    |                |
 +--------------+--------------+------+-----+---------+----------------+
 ```
+by 
+```
+CREATE TABLE Users (
+    UserId INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
+    UserName VARCHAR(255) NOT NULL UNIQUE,
+    UserEmail VARCHAR(255),
+    UserPassword VARCHAR(255) NOT NULL,
+    UserImages VARCHAR(255)
+);
+```
 - mysql> DESCRIBE UserImages;
 ```
 +---------------+--------------+------+-----+---------+-------+
@@ -58,4 +68,13 @@ password: Abcd1234@
 | ImageData     | mediumblob   | YES  |     | NULL    |       |
 | ImageMetadata | varchar(255) | YES  |     | NULL    |       |
 +---------------+--------------+------+-----+---------+-------+
+```
+by 
+```
+CREATE TABLE Images (
+    ImageId INT NOT NULL PRIMARY KEY,
+    UserId INT,
+    ImageData MEDIUMBLOB,
+    ImageMetadata VARCHAR(255)
+);
 ```
