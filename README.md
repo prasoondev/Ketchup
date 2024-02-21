@@ -30,3 +30,32 @@ password: Abcd1234@
 ### Notes
 - Use admin credentials to login
 - Using the register command crashes the server which will be fixed in Milestone 2. 
+
+
+### Milestone 2 
+
+- Install all necessary mysql extensions such as flask-mysqldb, mysql-connector by using pip install in the venv (For Mac) or directly in Terminal for Linux users. 
+- Create all tables as mentioned.
+- mysql> DESCRIBE UserDetails;
+```
++--------------+--------------+------+-----+---------+----------------+
+| Field        | Type         | Null | Key | Default | Extra          |
++--------------+--------------+------+-----+---------+----------------+
+| UserId       | int          | NO   | PRI | NULL    | auto_increment |
+| UserName     | varchar(255) | NO   | UNI | NULL    |                |
+| UserEmail    | varchar(255) | YES  | UNI | NULL    |                |
+| UserPassword | varchar(255) | NO   |     | NULL    |                |
+| UserImages   | varchar(255) | YES  |     | NULL    |                |
++--------------+--------------+------+-----+---------+----------------+
+```
+- mysql> DESCRIBE UserImages;
+```
++---------------+--------------+------+-----+---------+-------+
+| Field         | Type         | Null | Key | Default | Extra |
++---------------+--------------+------+-----+---------+-------+
+| ImageId       | int          | NO   | PRI | NULL    |       |
+| UserId        | int          | YES  |     | NULL    |       |
+| ImageData     | mediumblob   | YES  |     | NULL    |       |
+| ImageMetadata | varchar(255) | YES  |     | NULL    |       |
++---------------+--------------+------+-----+---------+-------+
+```
