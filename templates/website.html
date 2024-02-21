@@ -13,7 +13,8 @@
 <body>
     <ul class="topnav">
         <li><a class="active" href="#home">Home</a></li>
-        <li><a href="#slideshow">Features</a></li>
+        <!-- <li><a href="#flexbox-section">Features</a></li> -->
+        <li><a href="#flexbox-section">Image Gallery</a></li>
         <li><a href="#our-team">Our Team</a></li>
         <li class="right"><a href="/logout">Logout</a></li>
     </ul>
@@ -26,7 +27,7 @@
 
     <!-- Slideshow Section -->
     <!-- Slideshow Section -->
-    <div id="flexbox-section" class="sections">
+    <!-- <div id="flexbox-section" class="sections">
         <div class="flexbox-item">
             <div class="flexbox-content">
                 <img src="../static/1.png" alt="Image 1">
@@ -53,6 +54,25 @@
                     <p>Slideshows are a button away.</p>
                 </div>
             </div>
+        </div>
+    </div> -->
+
+    <div id="flexbox-section" class="sections">
+        <h2 class="gallery-title">Image Gallery</h2>
+        <div>
+            {% if images %}
+                {% for encoded_image in images %}
+                <div class="image-container">
+                    <img src="data:image/jpeg;base64,{{ encoded_image }}" alt="Image">
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>{{ message }}</p>
+            {% endif %}
+        </div>
+        <div class="gallery-buttons">
+            <button class="gallery-button"><a href="/upload">Upload Images</a></button>
+            <button class="gallery-button" onclick="createVideo()">Create a Video</button>
         </div>
     </div>
 
@@ -85,7 +105,8 @@
                 this.classList.add('active');
             });
         });
-    });let mybutton = document.getElementById("topBtn");
+    });
+    let mybutton = document.getElementById("topBtn");
     window.onscroll = function () {
         scrollFunction();
     };
