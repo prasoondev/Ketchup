@@ -47,44 +47,55 @@ body {
 
 /* Flexbox Section Styles */
 #flexbox-section {
-    height: auto;
-    padding: 50px 0;
+    overflow-x: auto; /* Add horizontal scrollbar if content overflows */
+    white-space: nowrap; /* Prevent line breaks */
+}
+
+.gallery-title {
     text-align: center;
 }
 
-.flexbox-item {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 20px;
+.gallery-buttons {
+    text-align: center;
+    margin-top: 20px;
 }
 
-.flexbox-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 80%;
-    margin: auto;
+.gallery-button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
 }
 
-.flexbox-content img {
-    width: 50%;
-    max-width: 600px; /* Adjust the maximum width of the images */
+.gallery-button:hover {
+    background-color: #45a049;
+}
+
+.image-container {
+    display: inline-block;
+    margin: 5px;
+}
+
+.image-container img {
+    max-width: 200px; /* Adjust as needed */
     height: auto;
-    margin-right: 20px;
-}
-.flexbox-text {
-    width: 50%;
+    display: block;
 }
 
-.flexbox-text h3 {
-    font-size: 24px;
-    margin-bottom: 10px;
+a {
+    text-decoration: none; /* Remove underline */
+    color: white; /* Change the color to black */
 }
 
-.flexbox-text p {
-    font-size: 18px;
-    color: #555;
+a:hover {
+    color: white; /* Change the color on hover if needed */
 }
 
 
