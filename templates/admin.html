@@ -5,38 +5,95 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Details</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: fit-content;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+        }
+
+        h1 {
+            margin-top: 0;
+            color: #333;
+        }
+
         table {
-            border-collapse: collapse;
             width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
         }
+
         th, td {
-            border: 1px solid #dddddd;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
             text-align: left;
-            padding: 8px;
         }
+
         th {
+            background-color: #007bff;
+            color: #fff;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        tr:nth-child(even) {
             background-color: #f2f2f2;
+        }
+
+        a {
+            display: inline-block;
+            text-align: center;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #28a745;
+            padding: 12px 24px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        a:hover {
+            background-color: #218838;
         }
     </style>
 </head>
 <body>
-    <h1>User Details</h1>
-    <a href="/logout">Logout</a>
-    <table>
-        <tr>
-            <th>User ID</th>
-            <th>Username</th>
-            <th>UserEmail</th>
-            <th>Password (hashed)</th>
-        </tr>
-        {% for user in user_details %}
-        <tr>
-            <td>{{ user.UserId }}</td>
-            <td>{{ user.UserName }}</td>
-            <td>{{ user.UserEmail }}</td>
-            <td>{{ user.UserPassword }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <div class="container">
+        <h1>User Details</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Username</th>
+                    <th>User Email</th>
+                    <th>Password (hashed)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in user_details %}
+                <tr>
+                    <td>{{ user.UserId }}</td>
+                    <td>{{ user.UserName }}</td>
+                    <td>{{ user.UserEmail }}</td>
+                    <td>{{ user.UserPassword }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="/logout">Logout</a>
+    </div>
 </body>
 </html>
