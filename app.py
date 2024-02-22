@@ -10,33 +10,61 @@ import base64
 import secrets
 import hashlib
 
-secret_key = secrets.token_hex(32)
-
+# Initialize Flask app
 app = Flask(__name__)
+
+# Configure MySQL database
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'hello'
 app.config['MYSQL_PASSWORD'] = '123'
 app.config['MYSQL_DB'] = 'project'
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
-app.secret_key = 'secret_key_for_flash_messages'
-app.config['SECRET_KEY'] = secret_key
+
+# Initialize MySQL and Bcrypt instances
 mysql = MySQL(app)
 bcrypt = Bcrypt(app)
 
+# Generate a secret key for JWT
+secret_key = secrets.token_hex(32)
+app.secret_key = secret_key
+
 # Define a decorator to require authentication
-def login_required(f):
+def token_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if 'username' not in session:
+        token = request.cookies.get('token')
+
+        if not token:
             return redirect(url_for('login'))
-        return f(*args, **kwargs)
+
+        try:
+            data = jwt.decode(token, secret_key, algorithms=['HS256'])
+            current_user = data['username']
+        except jwt.ExpiredSignatureError:
+            return redirect(url_for('login'))
+        except jwt.InvalidTokenError:
+            return redirect(url_for('login'))
+
+        return f(current_user, *args, **kwargs)
+
     return decorated_function
+
 
 @app.route("/")
 def form():
-    username = session.get('username')
-    if username:
-        return redirect('/website')  # Redirect to login if username is not in session
+    token = request.cookies.get('token')
+    if token:
+        try:
+            data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
+            username = data['username']
+            # If token is valid, redirect to website
+            return redirect('/website')
+        except jwt.ExpiredSignatureError:
+            # Token has expired, render the registration page
+            pass
+        except jwt.InvalidTokenError:
+            # Invalid token, render the registration page
+            pass
     cur = mysql.connection.cursor()
     cur.execute("SELECT * FROM UserDetails WHERE UserName = %s", ('admin',))
     admin_user = cur.fetchone()
@@ -52,19 +80,24 @@ def register():
     if request.method == "POST":
         username = request.form['register-username']
         password = request.form['register-password']
-        email=request.form['register-useremail']
+        email = request.form['register-useremail']
+        
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM UserDetails WHERE UserEmail = %s", (email,))
         user = cur.fetchone()
         cur.close()
+
         if user:
             return render_template('register.html', error='User Email already exists')
 
+        # Hash the password before storing it
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+
         cur = mysql.connection.cursor()
         cur.execute("INSERT INTO UserDetails (UserName, UserEmail, UserPassword) VALUES (%s, %s, %s)", (username, email, hashed_password))
         mysql.connection.commit()
         cur.close()
+
         flash('Registration successful. Please log in.', 'success')
         return redirect(url_for('login'))
     
@@ -108,40 +141,30 @@ def login():
         cur.close()
 
         if user and bcrypt.check_password_hash(user['UserPassword'], password):
-            session['username'] = username
+            # Generate JWT token
+            token = jwt.encode({'username': username}, secret_key, algorithm='HS256')
 
-            # Set cookie for the username
+            # Set JWT token in cookies
             response = make_response(redirect(url_for('website')))
-            response.set_cookie('username', username)
-
+            response.set_cookie('token', token, httponly=True)  # Set HttpOnly flag for security
             return response
 
         return "Invalid Username or Password. Please Try Again."
     
-    # Check if the user has a valid session token
-    if 'username' in session and 'token' in session:
-        # Validate the token
-        try:
-            jwt.decode(session['token'], app.config['SECRET_KEY'], algorithms=['HS256'])
-            # Token is valid, redirect to the dashboard
-            return redirect(url_for('website'))
-        except jwt.ExpiredSignatureError:
-            # Token has expired, require the user to log in again
-            session.pop('username', None)
-            session.pop('token', None)
+    # If the user is already logged in, redirect to the website
+    if 'username' in session:
+        return redirect(url_for('website'))
+
     return render_template('login.html')
 
 @app.route('/website')
-@login_required
-def website():
-    username = session.get('username')
-    if not username:
-        return redirect('/login')  # Redirect to login if username is not in session
-
+@token_required
+def website(current_user):
     # Retrieve user_id based on username
     cursor = mysql.connection.cursor()
-    cursor.execute("SELECT UserId FROM UserDetails WHERE Username = %s", (username,))
+    cursor.execute("SELECT UserId FROM UserDetails WHERE Username = %s", (current_user,))
     user = cursor.fetchone()
+
     if not user:
         return render_template('website.html', message="User not found.")
 
@@ -161,61 +184,66 @@ def website():
         return render_template('website.html', message="No images found for the user.")
 
     return render_template('website.html', images=encoded_images)
+import hashlib
 
 @app.route('/upload', methods=['GET', 'POST'])
-@login_required
-def upload_page():
+@token_required
+def upload_page(current_user):
     if request.method == 'POST':
-        if 'file' not in request.files:
-            return redirect(request.url)
-        file = request.files['file']
-        if file.filename == '':
+        # Check if the request contains files
+        if 'files' not in request.files:
             return redirect(request.url)
 
-        username = session.get('username')
-        if not username:
-            return redirect('/login')  # Redirect to login if username is not in session
+        # Get the list of files uploaded
+        files = request.files.getlist('files')
 
         # Retrieve user_id based on username
         cursor = mysql.connection.cursor()
-        cursor.execute("SELECT UserId FROM UserDetails WHERE Username = %s", (username,))
+        cursor.execute("SELECT UserId FROM UserDetails WHERE UserName = %s", (current_user,))
         user = cursor.fetchone()
+
         if not user:
             return 'User not found.'
 
         user_id = user['UserId']
 
-        # Calculate hash value of the image data
-        image_data = file.read()
-        image_hash = hashlib.sha256(image_data).hexdigest()
+        for file in files:
+            if file.filename == '':
+                continue  # Skip empty file inputs
 
-        try:
-            # Check if the image hash already exists in ImageMetadata column of UserImages table
-            cursor.execute("SELECT * FROM UserImages WHERE ImageMetadata = %s", (image_hash,))
-            existing_image = cursor.fetchone()
-            if existing_image:
-                flash('You have already uploaded this image.', 'error')
-                return redirect('/website')
+            # Calculate hash value of the image data incorporating user ID
+            image_data = file.read()
+            combined_data = f"{user_id}:{image_data}".encode('utf-8')
+            image_hash = hashlib.sha256(combined_data).hexdigest()
 
-            # Insert image data and metadata into UserImages table
-            cursor.execute("INSERT INTO UserImages (UserId, ImageMetadata, ImageData) VALUES (%s, %s, %s)", (user_id, image_hash, image_data))
-            mysql.connection.commit()
+            try:
+                # Check if the image hash already exists in ImageMetadata column of UserImages table
+                cursor.execute("SELECT * FROM UserImages WHERE ImageMetadata = %s", (image_hash,))
+                existing_image = cursor.fetchone()
 
-            return redirect('/website')
-        except Error as e:
-            print(f"The error '{e}' occurred")
-            return 'An error occurred while uploading the image'
+                if existing_image:
+                    flash('You have already uploaded one or more images.', 'error')
+                    continue
+
+                # Insert image data and metadata into UserImages table
+                cursor.execute("INSERT INTO UserImages (UserId, ImageMetadata, ImageData) VALUES (%s, %s, %s)", (user_id, image_hash, image_data))
+                mysql.connection.commit()
+
+            except Error as e:
+                print(f"The error '{e}' occurred")
+                flash('An error occurred while uploading one or more images.', 'error')
+
+        return redirect('/website')
 
     return render_template('upload.html')
-
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.pop('username', None)
 
-    # Clear the username cookie
+    # Clear the token cookie
     response = make_response(render_template('login.html'))
-    response.set_cookie('username', '', expires=0)
+    response.set_cookie('token', '', expires=0, httponly=True)
 
     return response
 
