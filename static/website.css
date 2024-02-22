@@ -47,8 +47,12 @@ body {
 
 /* Flexbox Section Styles */
 #flexbox-section {
-    overflow-x: auto; /* Add horizontal scrollbar if content overflows */
-    white-space: nowrap; /* Prevent line breaks */
+    height: auto;
+    padding: 50px 0;
+    text-align: center;
+    display: flex;
+    flex-wrap: wrap; /* Allow items to wrap to the next row */
+    justify-content: center /* Prevent line breaks */
 }
 
 .gallery-title {
@@ -84,7 +88,7 @@ body {
 }
 
 .image-container img {
-    max-width: 200px; /* Adjust as needed */
+    width: 300px; /* Adjust as needed */
     height: auto;
     display: block;
 }
