@@ -5,33 +5,10 @@
 
 git pull
 
-
-### Running the Website
-
-To run the project you first need to download npm.
-
-For MacOS users, run brew install npm in the terminal.
-
-For Linux users, run sudo apt install npm in the terminal.
-
-Now you need to install express and bcrypt. Run the following commands.
-
-
-npm install express
-npm install bcrypt
-
-
-To run the server, run node server.js with the directory where all the files are stored.
-
 ### Admin Login Details 
-username: admninadmin
-password: Abcd1234@
-
-### Notes
-- Use admin credentials to login
-- Using the register command crashes the server which will be fixed in Milestone 2. 
-
-
+username: admnin
+password: 123456
+\
 ### Milestone 2 
 
 - Install all necessary mysql extensions such as flask-mysqldb, mysql-connector by using pip install in the venv (For Mac) or directly in Terminal for Linux users. 
@@ -76,5 +53,23 @@ CREATE TABLE Images (
     UserId INT,
     ImageData MEDIUMBLOB,
     ImageMetadata VARCHAR(255)
+);
+```
+- mysql> DESCRIBE Audio;
+```
++---------------+----------+------+-----+---------+----------------+
+| Field         | Type     | Null | Key | Default | Extra          |
++---------------+----------+------+-----+---------+----------------+
+| AudioID       | int      | NO   | PRI | NULL    | auto_increment |
+| AudioBlob     | longblob | YES  |     | NULL    |                |
+| AudioMetadata | text     | YES  |     | NULL    |                |
++---------------+----------+------+-----+---------+----------------+
+```
+by 
+```
+CREATE TABLE Audio (
+    AudioID INT AUTO_INCREMENT PRIMARY KEY,
+    AudioBlob LONGBLOB,
+    AudioMetadata TEXT
 );
 ```
