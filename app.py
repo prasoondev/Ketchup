@@ -126,7 +126,8 @@ def admin():
 
                 return response
             else:
-                return render_template('adminlogin.html', error='Invalid username or password')
+                msg = 'Incorrect username / password !'
+                return render_template('adminlogin.html', msg=msg)
     return render_template('adminlogin.html')
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -149,7 +150,8 @@ def login():
             response.set_cookie('token', token, httponly=True)  # Set HttpOnly flag for security
             return response
 
-        return "Invalid Username or Password. Please Try Again."
+        msg = 'Incorrect username / password !'
+        return render_template('login.html', msg = msg)
     
     # If the user is already logged in, redirect to the website
     if 'username' in session:
