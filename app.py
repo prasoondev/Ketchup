@@ -36,7 +36,6 @@ def token_required(f):
 
         if not token:
             return redirect(url_for('login'))
-
         try:
             data = jwt.decode(token, secret_key, algorithms=['HS256'])
             current_user = data['username']
@@ -83,7 +82,7 @@ def register():
         email = request.form['register-useremail']
         
         cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM UserDetails WHERE UserEmail = %s", (email,))
+        cur.execute("SELECT * FROM UserDetails WHERE UserName = %s", (username,))
         user = cur.fetchone()
         cur.close()
 
@@ -105,6 +104,7 @@ def register():
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
+
     if request.method == 'POST':
         data = request.form
         username = data['login-username']
@@ -184,7 +184,35 @@ def website(current_user):
         return render_template('website.html', message="No images found for the user.")
 
     return render_template('website.html', images=encoded_images)
-import hashlib
+
+@app.route('/videomaker')
+@token_required
+def videomaker(current_user):
+    # Retrieve user_id based on username
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT UserId FROM UserDetails WHERE Username = %s", (current_user,))
+    user = cursor.fetchone()
+
+    if not user:
+        return render_template('videomaker.html', message="User not found.")
+
+    user_id = user['UserId']
+
+    # Retrieve images uploaded by the user
+    cursor.execute("SELECT * FROM UserImages WHERE UserId = %s", (user_id,))
+    images = cursor.fetchall()
+
+    encoded_images = []
+    for image in images:
+        encoded_image = base64.b64encode(image['ImageData']).decode('utf-8')
+        encoded_images.append(encoded_image)
+
+    if not encoded_images:
+        # If no images are found, render the website with a message
+        return render_template('videomaker.html', message="No images found for the user.")
+
+    return render_template('videomaker.html', images=encoded_images)
+
 
 @app.route('/upload', methods=['GET', 'POST'])
 @token_required
@@ -233,18 +261,50 @@ def upload_page(current_user):
                 print(f"The error '{e}' occurred")
                 flash('An error occurred while uploading one or more images.', 'error')
 
-        return redirect('/website')
+        return redirect('/upload')
 
     return render_template('upload.html')
+
+@app.route('/delete_images', methods=['GET', 'POST'])
+@token_required
+def delete_images(current_user):
+    if request.method == 'POST':
+        # Get the list of image IDs to be deleted
+        images_to_delete = request.form.getlist('delete')
+
+        if images_to_delete:
+            try:
+                # Delete the selected images from the database
+                cursor = mysql.connection.cursor()
+                for image_id in images_to_delete:
+                    cursor.execute("DELETE FROM UserImages WHERE ImageId = %s AND UserId = (SELECT UserId FROM UserDetails WHERE UserName = %s)", (image_id, current_user))
+                    mysql.connection.commit()
+
+                flash('Selected images deleted successfully.', 'success')
+            except Error as e:
+                print(f"The error '{e}' occurred")
+                flash('An error occurred while deleting selected images.', 'error')
+
+            return redirect('/delete_images')
+
+    # Fetch images associated with the current user from the database
+    cursor = mysql.connection.cursor()
+    cursor.execute("SELECT * FROM UserImages WHERE UserId = (SELECT UserId FROM UserDetails WHERE UserName = %s)", (current_user,))
+    images = cursor.fetchall()
+    cursor.close()
+    for image in images:
+        image_data = base64.b64encode(image['ImageData']).decode('utf-8')
+        image['ImageData'] = image_data
+
+    return render_template('delete_images.html', images=images)
+
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.pop('username', None)
-
     # Clear the token cookie
     response = make_response(render_template('login.html'))
     response.set_cookie('token', '', expires=0, httponly=True)
-
     return response
 
 if __name__=='__main__':
