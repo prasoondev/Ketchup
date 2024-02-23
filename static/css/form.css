@@ -20,6 +20,10 @@ body {
     color: #fff;
 }
 
+.msg{
+    margin-bottom: 7px;
+}
+
 input {
     width: 100%;
     padding: 10px;
