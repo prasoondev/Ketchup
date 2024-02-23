@@ -126,8 +126,11 @@ def admin():
 
                 return response
             else:
-                msg = 'Incorrect username / password !'
-                return render_template('adminlogin.html', msg=msg)
+                msg2 = 'Incorrect username / password !'
+                return render_template('adminlogin.html', msg=msg2)
+        else:
+            msg2 = 'Incorrect username / password !'
+            return render_template('adminlogin.html', msg=msg2)
     return render_template('adminlogin.html')
 
 @app.route('/login', methods=['POST', 'GET'])
