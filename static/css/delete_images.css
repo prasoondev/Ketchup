@@ -1,0 +1,43 @@
+.image-container {
+    display: inline-block;
+    margin: 5px;
+}
+
+.image-container img {
+    border-radius: 20px;
+    height: 300px; /* Adjust as needed */
+    width: auto;
+    display: block;
+}
+
+.gallery-buttons {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.gallery-button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.back-button-container{
+    margin-top: 20px;
+}
+
+a {
+    text-decoration: none; /* Remove underline */
+    color: white; /* Change the color to black */
+}
+
+a:hover {
+    color: white; /* Change the color on hover if needed */
+}
