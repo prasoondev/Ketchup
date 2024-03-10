@@ -1,0 +1,132 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+h1 {
+    text-align: center;
+    color: #ff0000; /* Red color for headings */
+}
+
+.container {
+    max-width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+
+label#chooseFile {
+    display: inline-block;
+    background-color: #ff0000; /* Red background color for button */
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+label#chooseFile:hover {
+    background-color: #cc0000; /* Darker red on hover */
+}
+
+button[type="submit"], button#upload-btn, a.go-back-btn {
+    display: block;
+    margin: 10px auto;
+    padding: 10px 20px;
+    background-color: #ff0000; /* Red background color for buttons */
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button[type="submit"]:hover, button#upload-btn:hover {
+    background-color: #cc0000; /* Darker red on hover */
+}
+
+a.go-back-btn {
+    display: inline-block;
+    margin: 10px auto; /* Centering the button */
+    padding: 5px 10px; /* Smaller padding for the button */
+    background-color: #ff0000; /* Red background color for buttons */
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+a {
+    text-decoration: none; /* Remove underline */
+    color: white; /* Change the color to black */
+}
+
+a:hover {
+    color: white; /* Change the color on hover if needed */
+}
+
+#drop-area {
+    text-align: center;
+    margin-top: 20px;
+    padding: 150px;
+    border: 2px dashed #ff0000; /* Red dashed border for drop area */
+    border-radius: 5px;
+    background-color: #fff;
+    color: #555;
+}
+
+/* Style for the image gallery container */
+#image-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Style for individual gallery images */
+.gallery-image {
+    width: 200px; /* Set the width of each image */
+    height: auto; /* Maintain aspect ratio */
+    margin: 10px; /* Add margin between images */
+    border: 1px solid #ccc; /* Add a border around each image */
+    border-radius: 5px; /* Add border radius for rounded corners */
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Add a subtle shadow effect */
+}
+
+#drop-area:hover {
+    background-color: #f9f9f9;
+}
+
+.gallery-buttons {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.gallery-button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    background-color: #ff0000; /* Green */
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.gallery-button:hover {
+    background-color: #cc0000;
+}
+
+.msg{
+    color: #ed4337;
+    margin-bottom: 7px;
+}

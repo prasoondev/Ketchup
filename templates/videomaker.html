@@ -1,0 +1,130 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create a Video</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../static/css/videomaker.css">
+</head>
+<body>
+
+<div class="container">
+    <h1>Create a Video</h1>
+    <h2>Image Gallery</h2>
+    <div class="gallery-images">
+        {% if images %}
+            {% for encoded_image in images %}
+            <div class="image-container">
+                <img src="data:image/jpeg;base64,{{ encoded_image }}" alt="Image">
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>{{ message }}</p>
+        {% endif %}
+    </div>
+  <div class="audio-list">
+    <h2>Add Background Music</h2>
+    <ul>
+      <li><a href="audio1.mp3">Audio 1</a></li>
+      <li><a href="audio2.mp3">Audio 2</a></li>
+      <li><a href="audio3.mp3">Audio 3</a></li>
+    </ul>
+  </div>
+  
+  <div class="transition-buttons">
+    <h2>Add Transitions</h2>
+    <button>Fade</button>
+    <button>Slide</button>
+    <button>Zoom</button>
+  </div>
+  
+  <div class="video-player">
+    <h2>Preview video</h2>
+    <video controls>
+      <source src="test.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+  
+  <div class="resolution-select">
+    <h2>Select Resolution</h2>
+    <select>
+      <option value="480p">480p</option>
+      <option value="720p">720p</option>
+      <option value="1080p">1080p</option>
+    </select>
+  </div>
+  
+  <button class="create-video-button">Create Video</button>
+  <button class="create-video-button"><a href='/website'>Go Back</a></button>
+</div>
+
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Timeline</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../static/css/videomaker.css">
+</head>
+<body class="bg-gray-900 text-white" style="background-color: #fff">
+  <div id="container" class="fixed w-1/4 h-full top-0 left-0 overflow-y-auto bg-gray-800 p-6">
+    <h2 class="text-2xl font-bold mb-4">Image Library</h2>
+    <div class="gallery-header">
+      <div class="gallery-buttons">
+          <button class="gallery-button"><a href="/website">Go Back</a></button>
+          <button class="gallery-button"><a href="/">Create Video</a></button>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label for="duration-select" class="block text-sm font-medium text-white-400 mb-1">Duration:</label>
+      <select id="duration-select" class="form-select duration-dropdown">
+        <option value="5">5 seconds</option>
+        <option value="10">10 seconds</option>
+        <option value="15">15 seconds</option>
+      </select>
+    </div>
+    <div class="mb-4">
+      <label for="transition-select" class="block text-sm font-medium text-white-400 mb-1">Audio:</label>
+      <select id="transition-select" class="form-select animation-dropdown">
+        <option value="Audio 1">Audio 1</option>
+        <option value="Audio 2">Audio 2</option>
+        <option value="Audio 3">Audio 3</option>
+        <option value="Audio 4">Audio 4</option>
+        <option value="Audio 5">Audio 5</option>
+      </select>
+    </div>
+    <div id="image-library" class="flex flex-col items-start">
+      {% if images %}
+        {% for encoded_image in images %}
+          <img src="data:image/jpeg;base64,{{ encoded_image }}" alt="Image" class="image mb-2 rounded">
+        {% endfor %}
+      {% else %}
+        <p class="text-gray-400">No images available.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <div id="timeline" class="fixed w-3/4 h-1/4 bottom-0 right-0 overflow-y-auto bg-gray-800 p-6">
+    <h2 class="text-2xl font-bold mb-4">Timeline</h2>
+    <div id="timeline-images" class="flex flex-wrap gap-4">
+      <!-- Timeline images will be dynamically added here -->
+    </div>
+  </div>
+
+  <div id="video-container" class="fixed top-10 right-10 z-50">
+    <video controls class="w-64">
+      <source src="../static/video.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <script src="../static/javascript/videomaker.js"></script>
+</body>
+</html>
