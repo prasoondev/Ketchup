@@ -73,3 +73,6 @@ CREATE TABLE Audio (
     AudioMetadata TEXT
 );
 ```
+### Milestone 3
+
+- Shift to Online SQL has been done. We are using CockroachDB. Ensure that the root.crt is in the same directory as app.py.
