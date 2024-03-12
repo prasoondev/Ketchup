@@ -1,11 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, jsonify, make_response, json
 from flask_bcrypt import Bcrypt
-from flask_mysqldb import MySQL
 import jwt
 from functools import wraps
 import datetime 
-import mysql.connector
-from mysql.connector import Error
 import base64
 import secrets
 import hashlib
@@ -13,11 +10,7 @@ import os
 import psycopg2
 import random
 
-# Initialize Flask app
 app = Flask(__name__)
-
-# Initialize MySQL and Bcrypt instances
-mysql = MySQL(app)
 bcrypt = Bcrypt(app)
 
 # Generate a secret key for JWT
@@ -123,7 +116,7 @@ def form():
     conn.commit()
     cur.close()
     conn.close()
-    return render_template("register.html")
+    return render_template("landing_page.html")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
@@ -134,17 +127,14 @@ def register():
         
         conn = connect_to_database()
         cur = conn.cursor()
-        cur.execute("SELECT * FROM UserDetails WHERE UserName = %s", (username,))
+        cur.execute("SELECT * FROM UserDetails WHERE UserEmail = %s", (email,))
         user = cur.fetchone()
         cur.close()
         conn.close()
-
         if user:
-            return render_template('register.html', error='User Email already exists')
-
+            return render_template('register.html', msg='Invalid! Email already exists')
         # Hash the password before storing it
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
-
         conn = connect_to_database()
         cur = conn.cursor()
         cur.execute("INSERT INTO UserDetails (UserName, UserEmail, UserPassword) VALUES (%s, %s, %s)", (username, email, hashed_password))
@@ -169,13 +159,11 @@ def admin():
             cur.execute("SELECT * FROM UserDetails WHERE UserName = %s", (username,))
             admin_user = cur.fetchone()
             cur.close()
-            if admin_user and bcrypt.check_password_hash(admin_user['UserPassword'], password):
+            if admin_user and bcrypt.check_password_hash(admin_user[3], password):
                 conn = connect_to_database()
                 cur = conn.cursor()
                 cur.execute("SELECT * FROM UserDetails")
                 user_details = cur.fetchall()
-                cur.close()
-                conn.close()
                 # Set cookie for the username
                 response = make_response(render_template('admin.html', user_details=user_details))
                 response.set_cookie('username', username)
@@ -188,6 +176,8 @@ def admin():
             msg2 = 'Incorrect username / password !'
             return render_template('adminlogin.html', msg=msg2)
     return render_template('adminlogin.html')
+    cur.close()
+    conn.close()
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
@@ -385,9 +375,51 @@ def delete_images(current_user):
 def logout():
     session.pop('username', None)
     # Clear the token cookie
-    response = make_response(render_template('login.html'))
+    response = make_response(render_template('landing_page.html'))
     response.set_cookie('token', '', expires=0, httponly=True)
     return response
+
+
+@app.route('/receive-images', methods=['POST'])
+def receive_images():
+    data = request.json  # Get the JSON data from the request
+
+    # Check if the received data is not empty
+    if data:
+        # Extract the 'images' key from the received JSON data
+        images = data.get('images', [])
+        
+        # Remove existing images
+        if os.path.exists('received_images'):
+            for filename in os.listdir('received_images'):
+                file_path = os.path.join('received_images', filename)
+                os.remove(file_path)
+        
+        # Create a directory to save the received images if it doesn't exist
+        if not os.path.exists('received_images'):
+            os.makedirs('received_images')
+        
+        # Save each image to a file
+        for index, image in enumerate(images, start=1):
+            src = image.get('src', '')
+            duration = image.get('duration', 0)
+            transition = image.get('transition', '')
+            
+            # Decode the base64-encoded image data
+            image_data = base64.b64decode(src.split(',')[1])
+            
+            # Specify the file path to save the image
+            image_path = f'received_images/image{index}.jpg'  # You can change the extension as per your image format
+            
+            # Write the image data to the file
+            with open(image_path, 'wb') as file:
+                file.write(image_data)
+        
+        # Return a success message
+        return 'Received images data successfully and saved to file.', 200
+    else:
+        # Return an error message if no data is received
+        return 'No data received.', 400
 
 if __name__=='__main__':
     app.run(debug=True)
