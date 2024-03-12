@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KetchUP</title>
+    <link rel="stylesheet" href="../static/css/upload.css">
+    <link rel="icon" type="image/x-icon" href="../static/images/favicon.ico">
+</head>
+<body>
+  <div class="container">
+    <h1>Upload Images</h1>
+    <form method="POST" action="/upload" enctype="multipart/form-data">
+        <input type="file" name="files" multiple>
+        <button type="submit">Upload</button>
+    </form>
+    <div id="drop-area">Drag & Drop Images Here</div>
+    <h1>Image Gallery</h1>
+    <div id="image-gallery"></div>
+    <div class="msg">{{ msg }}</div>
+    <button id="upload-btn">Upload</button>
+    <div class="gallery-buttons">
+      <button class="gallery-button"><a href="/website">Go Back</a></button>
+    </div>
+  </div>
+    <script src="../static/javascript/upload.js"></script>
+</body>
+</html>
