@@ -13,6 +13,22 @@ import random
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
 
+def add_header(response):
+    """
+    Add headers to disable caching.
+    """
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
+    return r
+@app.after_request
+def after_request(response):
+    """
+    Apply headers to all responses.
+    """
+    return add_header(response)
+
 # Generate a secret key for JWT
 secret_key = secrets.token_hex(32)
 app.secret_key = secret_key
