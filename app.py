@@ -9,6 +9,13 @@ import hashlib
 import os
 import psycopg2
 import random
+import numpy as np
+from moviepy.editor import *
+from moviepy.video.fx.fadein import fadein
+from moviepy.video.fx.fadeout import fadeout
+from pydub import AudioSegment
+from PIL import Image
+from moviepy.editor import concatenate_audioclips, AudioFileClip
 
 app = Flask(__name__)
 bcrypt = Bcrypt(app)
@@ -29,9 +36,9 @@ def after_request(response):
     """
     return add_header(response)
 
-# Generate a secret key for JWT
 secret_key = secrets.token_hex(32)
 app.secret_key = secret_key
+
 def create_table():
     conn = connect_to_database()
     with conn.cursor() as cur:
@@ -48,7 +55,7 @@ def create_table():
         conn.commit()
         create_table_query = """
         CREATE TABLE IF NOT EXISTS UserImages (
-            ImageId SERIAL PRIMARY KEY,
+            ImageId VARCHAR(255),
             UserId INT, 
             ImageData BYTEA,
             ImageMetadata VARCHAR(255)
@@ -58,11 +65,24 @@ def create_table():
         conn.commit()
         create_table_query = """
         CREATE TABLE IF NOT EXISTS Audio (
-            AudioID SERIAL PRIMARY KEY,
+            AudioID VARCHAR(255),
             AudioBlob BYTEA,
             AudioMetadata TEXT
         );
         """
+        # create_table_query = """
+        # DROP TABLE IF EXISTS UserDetails;
+        # """
+        # cur.execute(create_table_query)
+        # conn.commit()
+        # create_table_query = """
+        # DROP TABLE IF EXISTS UserImages;
+        # """
+        # cur.execute(create_table_query)
+        # conn.commit()
+        # create_table_query = """
+        # DROP TABLE IF EXISTS Audio;
+        # """
         cur.execute(create_table_query)
         conn.commit()
         conn.close()
@@ -108,7 +128,7 @@ def connect_to_database():
 
 @app.route("/")
 def form():
-    create_table()
+    # create_table()
     token = request.cookies.get('token')
     if token:
         try:
@@ -259,7 +279,21 @@ def website(current_user):
 @app.route('/videomaker')
 @token_required
 def videomaker(current_user):
-    # Retrieve user_id based on username
+    conn = connect_to_database()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Audio")
+    audio_files = cursor.fetchall()
+    cursor.close()
+    conn.close()
+
+    # Encode audio data to base64
+    encoded_audio_files = []
+    for audio in audio_files:
+        audio_id, audio_blob, audio_metadata = audio
+        print(audio_id)
+        encoded_audio = base64.b64encode(audio_blob).decode('utf-8')
+        encoded_audio_files.append((audio_id, encoded_audio, audio_metadata))
+    
     conn = connect_to_database()
     cursor = conn.cursor()
     cursor.execute("SELECT UserId FROM UserDetails WHERE Username = %s", (current_user,))
@@ -278,71 +312,78 @@ def videomaker(current_user):
     for image in images:
         encoded_image = base64.b64encode(image[2]).decode('utf-8')
         encoded_images.append(encoded_image)
-
+    
     if not encoded_images:
         # If no images are found, render the website with a message
         return render_template('videomaker.html', message="No images found for the user.")
     cursor.close()
     conn.close()
-    return render_template('videomaker.html', images=encoded_images)
+    return render_template('videomaker.html', images=encoded_images, audio_files=encoded_audio_files)
 
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/upload', methods=['GET','POST'])
 @token_required
 def upload_page(current_user):
     if request.method == 'POST':
+        
         # Check if the request contains files
-        if 'files' not in request.files:
+        if 'fileInput' not in request.files:
             return redirect(request.url)
 
         # Get the list of files uploaded
-        files = request.files.getlist('files')
+        files = request.files.getlist('fileInput')
 
         # Retrieve user_id based on username
         conn = connect_to_database()
-        cursor = conn.cursor()
-        cursor.execute("SELECT UserId FROM UserDetails WHERE UserName = %s", (current_user,))
-        user = cursor.fetchone()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT UserId FROM UserDetails WHERE UserName = %s", (current_user,))
+                user = cursor.fetchone()
 
-        if not user:
-            return 'User not found.'
+                if not user:
+                    return 'User not found.'
 
-        user_id = user[0]
-        flag=0
-        for file in files:
-            if file.filename == '':
-                continue  # Skip empty file inputs
+                user_id = user[0]
+                flag = 0
+                for file in files:
+                    if file.filename == '':
+                        continue  # Skip empty file inputs
 
-            # Calculate hash value of the image data incorporating user ID
-            image_data = file.read()
-            combined_data = f"{user_id}:{image_data}".encode('utf-8')
-            image_hash = hashlib.sha256(combined_data).hexdigest()
-            try:
-                # Check if the image hash already exists in ImageMetadata column of UserImages table
-                cursor.execute("SELECT * FROM UserImages WHERE ImageMetadata = %s", (image_hash,))
-                existing_image = cursor.fetchone()
+                    # Calculate hash value of the image data incorporating user ID
+                    image_data = file.read()
+                    image_filename = str(file.filename)
+                    print(image_filename)
+                    combined_data = f"{user_id}:{image_data}".encode('utf-8')
+                    image_hash = hashlib.sha256(combined_data).hexdigest()
 
-                if existing_image:
-                    flash('You have already uploaded one or more images.', 'error')
-                    flag=1
-                    continue
+                    # Check if the image hash already exists in ImageMetadata column of UserImages table
+                    cursor.execute("SELECT * FROM UserImages WHERE ImageMetadata = %s", (image_hash,))
+                    existing_image = cursor.fetchone()
 
-                # Insert image data and metadata into UserImages table
-                cursor.execute("INSERT INTO UserImages (UserId, ImageMetadata, ImageData) VALUES (%s, %s, %s)", (user_id, image_hash, image_data))
-                conn.commit()
-            except Error as e:
-                msg = 'Error occurred! Please Try Again.'
-                print(f"The error '{e}' occurred")
-                flash('An error occurred while uploading one or more images.', 'error')
+                    if existing_image:
+                        flash('You have already uploaded one or more images.', 'error')
+                        flag = 1
+                        continue
+
+                    # Insert image data and metadata into UserImages table
+                    cursor.execute("INSERT INTO UserImages (ImageId, UserId, ImageMetadata, ImageData) VALUES (%s, %s, %s, %s)",
+                                   (image_filename, user_id, image_hash, image_data))
+                conn.commit()  # Commit the transaction if all queries executed successfully
+                if flag:
+                    msg = 'Some Images were already in Database'
+                else:
+                    msg = 'Uploaded Successfully'
                 return render_template('upload.html', msg=msg)
-        cursor.close()
-        conn.close()
-        if(flag):
-            msg = 'Some Images were already in Database'
-        else:
-            msg = 'Uploaded Successfully'
-        return render_template('upload.html', msg=msg)
+        except Exception as e:
+            conn.rollback()  # Rollback the transaction in case of an error
+            msg = 'Error occurred! Please Try Again.'
+            print(f"The error '{e}' occurred")
+            flash('An error occurred while uploading one or more images.', 'error')
+            return render_template('upload.html', msg=msg)
+        finally:
+            conn.close()  # Ensure the database connection is closed after use
     return render_template('upload.html')
+
 
 @app.route('/delete_images', methods=['GET', 'POST'])
 @token_required
@@ -395,47 +436,209 @@ def logout():
     response.set_cookie('token', '', expires=0, httponly=True)
     return response
 
+def concatenate_audio_moviepy(audio_clip_paths, output_path):
+    clips = [AudioFileClip(c) for c in audio_clip_paths]
+    final_clip = concatenate_audioclips(clips)
+    final_clip.write_audiofile(output_path)
+
+def slide_from_right(clip1, clip2, transition_duration=1, fps=24):
+    if clip1.duration is None or clip2.duration is None:
+        raise ValueError("Both clips must have valid durations")
+
+    # Calculate the width of the clips
+    width = clip1.size[0]
+
+    # Calculate the number of frames in the transition
+    n_frames = int(fps * transition_duration)
+
+    # Generate a list of clips with position animation
+    transition_clips = [CompositeVideoClip([clip1.set_position(('right', 0)),
+                                            clip2.set_position((width, 0))
+                                            .fx(vfx.freeze, t)], size=clip1.size)
+                        .set_duration(transition_duration)
+                        .set_start(t)
+                        for t in np.linspace(0, transition_duration, n_frames)]
+
+    return concatenate_videoclips(transition_clips)
+
+def video(img_name_list, duration, directory, audiofile, transition='Fade'):
+    clips = []
+    for i, img_name in enumerate(img_name_list):
+        # Ensure that the duration list has enough elements
+        if i >= len(duration):
+            break
+        img_clip = ImageClip(os.path.join(directory, img_name)).set_duration(duration[i])
+        clips.append(img_clip)
+
+    # Apply transition between clips
+    transition_clips = []
+    for i in range(len(clips) - 1):
+        if transition == 'Fade':
+            transition_clip = fadein(clips[i], duration=0.5).fadeout(0.5)
+        elif transition == 'Slide':
+            transition_clip = slide_from_right(clips[i], clips[i + 1], transition_duration=1)
+        else:
+            transition_clip = clips[i]  # No transition
+        transition_clips.append(transition_clip)
+        transition_clips.append(clips[i + 1])
+
+    video_clip = concatenate_videoclips(transition_clips, method='compose')
+    
+    audio_file = AudioFileClip(audiofile)
+    while audio_file.duration < video_clip.duration:
+        c = [audiofile, audiofile]
+        concatenate_audio_moviepy(c, audiofile)
+        audio_file = AudioFileClip(audiofile)
+    video_clip = video_clip.set_audio(audio_file.subclip(0, video_clip.duration))
+    output_file = os.path.join('static', 'video.mp4')
+    video_clip.write_videofile(output_file, fps=24)
+
+def resize_image(input_path, output_path, resolution):
+    try:
+        image = Image.open(input_path)
+        if image.mode == "RGBA":
+            image = image.convert("RGB")
+        resized_image = image.resize(resolution)
+        resized_image.save(output_path)
+    except Exception as e:
+        a=1
+
+def extract_number(filename):
+    a=(filename.strip("image"))
+    b=a.split(".")
+    return int(b[0])
+
+@app.route('/create-video', methods=['GET','POST'])
+@token_required
+def create_video(current_user):
+    transition = session.get('transition', '')
+    audio = session.get('audio', '')
+    resolution = session.get('resolution', '')
+    print(resolution)
+    durations = session.get('durations', [])  # Retrieve durations list from session
+    folder = "received_images"
+    directory = f'{folder}'
+    img_name_list = os.listdir(directory)
+    img_name_list = sorted(img_name_list, key=extract_number)
+    if resolution == '2160':
+        desired_resolution = (3840, 2160)  # 2160p (4K)
+    elif resolution == '1440':
+        desired_resolution = (2560, 1440)  # 1440p
+    elif resolution == '720':
+        desired_resolution = (1280, 720)   # 720p
+    elif resolution == '480':
+        desired_resolution = (854, 480)    # 480p
+    elif resolution == '360':
+        desired_resolution = (640, 360)    # 360p
+    elif resolution == '240':
+        desired_resolution = (426, 240)    # 240p
+    elif resolution == '144':
+        desired_resolution = (256, 144)    # 144p
+    else:
+        # Default to 720p if resolution is not recognized
+        desired_resolution = (1280, 720)
+    for i in img_name_list:
+        resize_image(os.path.join(directory, i),os.path.join(directory, i),desired_resolution)
+    print(img_name_list)
+    print(transition)
+    audiofile = f"static/audio/{audio}"
+    video(img_name_list, durations, directory, audiofile, transition)
+    return redirect(url_for('videomaker'))
 
 @app.route('/receive-images', methods=['POST'])
 def receive_images():
-    data = request.json  # Get the JSON data from the request
+    data = request.json
 
-    # Check if the received data is not empty
     if data:
-        # Extract the 'images' key from the received JSON data
         images = data.get('images', [])
+        session['transition'] = data.get('transition', '')
+        session['audio'] = data.get('audio', '')
+        session['resolution'] = data.get('resolution', '')
+        print(session)
+        # Clear existing session durations
+        session.pop('durations', None)
         
-        # Remove existing images
         if os.path.exists('received_images'):
             for filename in os.listdir('received_images'):
                 file_path = os.path.join('received_images', filename)
                 os.remove(file_path)
-        
-        # Create a directory to save the received images if it doesn't exist
+            print("All files in 'received_images' directory removed successfully.")
+        else:
+            print("The 'received_images' directory does not exist.")
+
         if not os.path.exists('received_images'):
             os.makedirs('received_images')
-        
-        # Save each image to a file
+        durations = []
         for index, image in enumerate(images, start=1):
             src = image.get('src', '')
             duration = image.get('duration', 0)
-            transition = image.get('transition', '')
-            
-            # Decode the base64-encoded image data
+            durations.append(duration)
             image_data = base64.b64decode(src.split(',')[1])
-            
-            # Specify the file path to save the image
-            image_path = f'received_images/image{index}.jpg'  # You can change the extension as per your image format
-            
-            # Write the image data to the file
+            image_path = f'received_images/image{index}.jpg'
             with open(image_path, 'wb') as file:
                 file.write(image_data)
         
-        # Return a success message
-        return 'Received images data successfully and saved to file.', 200
+        # Store durations list in session
+        session['durations'] = durations
+
+        return 'Images Saved', 200
     else:
-        # Return an error message if no data is received
         return 'No data received.', 400
+
+@app.route('/upload_audio', methods=['GET','POST'])
+@token_required
+def upload_audio(current_user):
+    if request.method == 'POST':
+        if 'audioFile' not in request.files:
+            return redirect(request.url)
+        audio_files = request.files.getlist('audioFile')
+        conn = connect_to_database()
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT UserId FROM UserDetails WHERE UserName = %s", (current_user,))
+                user = cursor.fetchone()
+
+                if not user:
+                    return 'User not found.'
+
+                user_id = user[0]
+                for audio_file in audio_files:
+                    if audio_file.filename == '':
+                        continue
+                    audio_data = audio_file.read()
+                    audio_filename = audio_file.filename
+                    cursor.execute("INSERT INTO Audio (AudioID, AudioBlob, AudioMetadata) VALUES (%s, %s, %s)",
+                                   (audio_filename, audio_data, datetime.datetime.now()))
+                conn.commit()
+                msg = 'Audio uploaded successfully.'
+                return render_template('upload_audio.html', msg=msg)
+        except Exception as e:
+            conn.rollback()
+            msg = 'Error occurred! Please try again.'
+            print(f"The error '{e}' occurred")
+            flash('An error occurred while uploading audio files.', 'error')
+            return render_template('upload_audio.html', msg=msg)
+        finally:
+            conn.close()
+    return render_template('upload_audio.html')
+
+@app.route('/audio_list', methods=['GET', 'POST'])
+@token_required
+def audio_list(current_user):
+    # Retrieve audio files associated with the current user from the database
+    conn = connect_to_database()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM Audio")
+    audio_files = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    encoded_audio_files = []
+    for audio in audio_files:
+        audio_id, audio_blob, audio_metadata = audio
+        encoded_audio = base64.b64encode(audio_blob).decode('utf-8')
+        encoded_audio_files.append((audio_id, encoded_audio, audio_metadata))
+
+    return render_template('audio_list.html', audio_files=encoded_audio_files)
 
 if __name__=='__main__':
     app.run(debug=True)
