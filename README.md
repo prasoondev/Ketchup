@@ -76,3 +76,4 @@ CREATE TABLE Audio (
 ### Milestone 3
 
 - Shift to Online SQL has been done. We are using CockroachDB. Ensure that the root.crt is in the same directory as app.py.
+- This is the final milestone, and we have done quite a few bonuses. We will be using render.com for final deployment.
