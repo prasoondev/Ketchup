@@ -99,8 +99,10 @@ def token_required(f):
             current_user = data['username']
         except jwt.ExpiredSignatureError:
             return redirect(url_for('login'))
-        except jwt.InvalidTokenError:
-            return redirect(url_for('login'))
+        except jwt.InvalidTokenError: 
+            # Handle invalid token error
+
+            return redirect(url_for('login'))  # Redirect or handle the error accordingly
 
         return f(current_user, *args, **kwargs)
 
@@ -436,63 +438,6 @@ def logout():
     response.set_cookie('token', '', expires=0, httponly=True)
     return response
 
-def concatenate_audio_moviepy(audio_clip_paths, output_path):
-    clips = [AudioFileClip(c) for c in audio_clip_paths]
-    final_clip = concatenate_audioclips(clips)
-    final_clip.write_audiofile(output_path)
-
-def slide_from_right(clip1, clip2, transition_duration=1, fps=24):
-    if clip1.duration is None or clip2.duration is None:
-        raise ValueError("Both clips must have valid durations")
-
-    # Calculate the width of the clips
-    width = clip1.size[0]
-
-    # Calculate the number of frames in the transition
-    n_frames = int(fps * transition_duration)
-
-    # Generate a list of clips with position animation
-    transition_clips = [CompositeVideoClip([clip1.set_position(('right', 0)),
-                                            clip2.set_position((width, 0))
-                                            .fx(vfx.freeze, t)], size=clip1.size)
-                        .set_duration(transition_duration)
-                        .set_start(t)
-                        for t in np.linspace(0, transition_duration, n_frames)]
-
-    return concatenate_videoclips(transition_clips)
-
-def video(img_name_list, duration, directory, audiofile, transition='Fade'):
-    clips = []
-    for i, img_name in enumerate(img_name_list):
-        # Ensure that the duration list has enough elements
-        if i >= len(duration):
-            break
-        img_clip = ImageClip(os.path.join(directory, img_name)).set_duration(duration[i])
-        clips.append(img_clip)
-
-    # Apply transition between clips
-    transition_clips = []
-    for i in range(len(clips) - 1):
-        if transition == 'Fade':
-            transition_clip = fadein(clips[i], duration=0.5).fadeout(0.5)
-        elif transition == 'Slide':
-            transition_clip = slide_from_right(clips[i], clips[i + 1], transition_duration=1)
-        else:
-            transition_clip = clips[i]  # No transition
-        transition_clips.append(transition_clip)
-        transition_clips.append(clips[i + 1])
-
-    video_clip = concatenate_videoclips(transition_clips, method='compose')
-    
-    audio_file = AudioFileClip(audiofile)
-    while audio_file.duration < video_clip.duration:
-        c = [audiofile, audiofile]
-        concatenate_audio_moviepy(c, audiofile)
-        audio_file = AudioFileClip(audiofile)
-    video_clip = video_clip.set_audio(audio_file.subclip(0, video_clip.duration))
-    output_file = os.path.join('static', 'video.mp4')
-    video_clip.write_videofile(output_file, fps=24)
-
 def resize_image(input_path, output_path, resolution):
     try:
         image = Image.open(input_path)
@@ -503,6 +448,79 @@ def resize_image(input_path, output_path, resolution):
     except Exception as e:
         a=1
 
+def concatenate_audio_moviepy(audio_clip_paths, output_path):
+    clips = [AudioFileClip(c) for c in audio_clip_paths]
+    final_clip = concatenate_audioclips(clips)
+    final_clip.write_audiofile(output_path)
+
+def video(img_name_list,duration,directory,audiofile,transition,audio_duration,diraudio):
+    clips = []
+    i=0
+    if transition=="fadein":
+        for img_name in img_name_list:
+            img_clip = ImageClip(os.path.join(directory, img_name)).set_duration(duration[i])
+            i=i+1
+            img_clip = fadein(img_clip, duration=0.5).fadeout(0.5)
+            clips.append(img_clip)
+    if transition=="fadeout":
+        for img_name in img_name_list:
+            img_clip = ImageClip(os.path.join(directory, img_name)).set_duration(duration[i])
+            i=i+1
+            img_clip = fadeout(img_clip, duration=0.5).fadeout(0.5)
+            clips.append(img_clip)
+    if transition=="crossfade":
+        for img_name in img_name_list:
+            img_clip = ImageClip(os.path.join(directory, img_name)).set_duration(duration[i])
+            i=i+1
+            img_clip = img_clip.crossfadein(0.5)
+            clips.append(img_clip)
+    video_clip = concatenate_videoclips(clips, method='compose')
+    i=0
+    print(len(audio_duration))
+    final_aud=[0]*len(audio_duration)
+    for audiof in audiofile:
+        print(os.path.join(diraudio, audiof))
+        audio_file=AudioFileClip(os.path.join(diraudio, audiof))
+        j=0
+        c=[]
+        if audio_file.duration>=audio_duration[i]:
+            c.append(os.path.join(diraudio, audiof))
+            concatenate_audio_moviepy(c,f"audio{i}.mp3")
+            final_aud[i]=f"audio{i}.mp3"
+            audio_file = AudioFileClip(f"audio{i}.mp3")
+        while audio_file.duration<audio_duration[i]:
+            print(f"looping audio{i}.mp3...")
+            if j==0:
+                c=[os.path.join(diraudio, audiof),os.path.join(diraudio, audiof)]
+            else:
+                c=[f"audio{i}.mp3",os.path.join(diraudio, audiof)]
+            j=1
+            concatenate_audio_moviepy(c,f"audio{i}.mp3")
+            final_aud[i]=f"audio{i}.mp3"
+            audio_file = AudioFileClip(f"audio{i}.mp3")
+        i=i+1   
+    i=0
+    print(final_aud)
+    for iu in audiofile:
+        os.remove(os.path.join(diraudio,iu))
+    audiofile=final_aud
+    d=[]
+    for audiof in audiofile:
+        print(audiof)
+        audio_file=AudioFileClip(audiof)
+        final=audio_file.subclip(0,audio_duration[i])
+        final.write_audiofile(f"faud{i}.mp3")
+        d.append(f"faud{i}.mp3")
+        i=i+1
+    audiofile=d
+    concatenate_audio_moviepy(audiofile,"out.mp3")
+    audio_file=AudioFileClip("out.mp3")
+    video_clip = video_clip.set_audio(audio_file.subclip(0, video_clip.duration))
+    video_clip.write_videofile("static/video.mp4", fps=24)
+    os.remove("out.mp3")
+    for i in audiofile:
+        os.remove(i)
+
 def extract_number(filename):
     a=(filename.strip("image"))
     b=a.split(".")
@@ -512,10 +530,11 @@ def extract_number(filename):
 @token_required
 def create_video(current_user):
     transition = session.get('transition', '')
-    audio = session.get('audio', '')
     resolution = session.get('resolution', '')
     print(resolution)
     durations = session.get('durations', [])  # Retrieve durations list from session
+    audio_durations = session.get('audiodurations', [])
+    audio_names = session.get('audionames', [])
     folder = "received_images"
     directory = f'{folder}'
     img_name_list = os.listdir(directory)
@@ -540,9 +559,15 @@ def create_video(current_user):
     for i in img_name_list:
         resize_image(os.path.join(directory, i),os.path.join(directory, i),desired_resolution)
     print(img_name_list)
+    print(durations)
+    print(directory)
+    print(audio_names)
     print(transition)
-    audiofile = f"static/audio/{audio}"
-    video(img_name_list, durations, directory, audiofile, transition)
+    print(audio_durations)
+    received_audio="received_audios"
+    audio_names=os.listdir(f"{received_audio}")
+    print(audio_names)
+    video(img_name_list, durations, directory, audio_names, transition, audio_durations, received_audio)
     return redirect(url_for('videomaker'))
 
 @app.route('/receive-images', methods=['POST'])
@@ -551,23 +576,32 @@ def receive_images():
 
     if data:
         images = data.get('images', [])
+        audios = data.get('audios', [])
         session['transition'] = data.get('transition', '')
         session['audio'] = data.get('audio', '')
         session['resolution'] = data.get('resolution', '')
-        print(session)
-        # Clear existing session durations
-        session.pop('durations', None)
-        
-        if os.path.exists('received_images'):
-            for filename in os.listdir('received_images'):
-                file_path = os.path.join('received_images', filename)
-                os.remove(file_path)
-            print("All files in 'received_images' directory removed successfully.")
-        else:
-            print("The 'received_images' directory does not exist.")
 
+        # Create directories if they do not exist
         if not os.path.exists('received_images'):
             os.makedirs('received_images')
+        if not os.path.exists('received_audios'):
+            os.makedirs('received_audios')
+
+        # Remove existing files in 'received_images' directory
+        for filename in os.listdir('received_images'):
+            file_path = os.path.join('received_images', filename)
+            os.remove(file_path)
+        print("All files in 'received_images' directory removed successfully.")
+
+        # Remove existing files in 'received_audios' directory
+        for filename in os.listdir('received_audios'):
+            file_path = os.path.join('received_audios', filename)
+            os.remove(file_path)
+        print("All files in 'received_audios' directory removed successfully.")
+
+        # Retrieve audio filenames from MySQL database
+
+        # Retrieve image durations from Flask request
         durations = []
         for index, image in enumerate(images, start=1):
             src = image.get('src', '')
@@ -577,10 +611,40 @@ def receive_images():
             image_path = f'received_images/image{index}.jpg'
             with open(image_path, 'wb') as file:
                 file.write(image_data)
-        
+
+        audio_durations = []
+        audio_names = []
+        for index, audio in enumerate(audios, start=1):
+            duration = audio.get('duration', 0)
+            audio_durations.append(duration)
+            name = audio.get('name', '')
+            name = name + ".mp3"
+            audio_names.append(name)
+        try:
+            for audio_filename in audio_names:
+                audio_path = f'received_audios/{audio_filename}'
+                with open(audio_path, 'wb') as file:
+                    conn = connect_to_database()
+                    cursor = conn.cursor()
+                    print("hello")
+                    cursor.execute("SELECT AudioBlob FROM Audio WHERE AudioID = %s", (audio_filename,))
+                    audio_data = cursor.fetchone()[0]
+                    file.write(audio_data)
+                    cursor.close()
+                    conn.close()
+
+            print("Audio files retrieved from the database and saved successfully.")
+        except Exception as e:
+            print(f"Error retrieving audio files from the database: {e}")
+            return 'Error retrieving audio files from the database.', 500
         # Store durations list in session
         session['durations'] = durations
+        session['audiodurations'] = audio_durations
+        session['audionames'] = audio_names
 
+        print(durations)
+        print(audio_durations)
+        print(audio_names)
         return 'Images Saved', 200
     else:
         return 'No data received.', 400
@@ -598,8 +662,8 @@ def upload_audio(current_user):
                 cursor.execute("SELECT UserId FROM UserDetails WHERE UserName = %s", (current_user,))
                 user = cursor.fetchone()
 
-                if not user:
-                    return 'User not found.'
+                if user[1]!="admin":
+                    return redirect(url_for(website))
 
                 user_id = user[0]
                 for audio_file in audio_files:
