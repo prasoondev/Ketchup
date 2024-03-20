@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio List</title>
+</head>
+<body>
+    <h1>List of Audio Files</h1>
+    <ul>
+        {% for audio in audio_files %}
+        <li>
+            <p>Audio File: {{ audio[0] }}</p>
+            <audio controls>
+                <source src="data:audio/mpeg;base64,{{ audio[1] }}" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+            <p>Metadata: {{ audio[2] }}</p>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

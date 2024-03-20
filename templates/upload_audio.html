@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../static/css/upload_audio.css">
+    <title>Audio Upload</title>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Audio Files</h1>
+        <form action="/upload_audio" method="POST" enctype="multipart/form-data">
+            <label id="chooseFile" for="audioFile">Choose File</label>
+            <input type="file" id="audioFile" name="audioFile" accept="audio/*" multiple>
+            <button type="submit">Upload</button>
+        </form>
+    </div>
+</body>
+</html>
