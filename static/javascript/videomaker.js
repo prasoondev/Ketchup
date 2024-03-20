@@ -147,7 +147,7 @@ function updateAudioTimeline() {
 function sendSelectedImagesAndAudiosToPython() {
     if (selectedImages.length > 0 || selectedAudios.length > 0) {
         const xhr = new XMLHttpRequest();
-        const url = 'http://127.0.0.1:5000/receive-images';
+        const url = 'https://course-project-group-55.onrender.com/receive-images';
         const data = JSON.stringify({ images: selectedImages, audios: selectedAudios, transition: transitionSelect.value, resolution: resolutionSelect.value });
 
         xhr.open('POST', url, true);
