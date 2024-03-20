@@ -77,18 +77,6 @@ body {
   border-radius: 10px; /* Add border-radius if needed */
 }
 
-.timeline-image::after {
-  content: ''; /* Add empty content for overlay */
-  position: absolute; /* Set overlay position */
-  top: 0; /* Align overlay to top */
-  left: 0; /* Align overlay to left */
-  width: 100%; /* Set width to 100% */
-  height: 100%; /* Set height to 100% */
-  border: 2px solid #e74c3c; /* Add border style */
-  border-radius: 10px; /* Add border-radius */
-  box-sizing: border-box; /* Ensure border is included in dimensions */
-}
-
 .animation-dropdown,
 .duration-dropdown {
   margin-bottom: 10px;
