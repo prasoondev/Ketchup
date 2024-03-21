@@ -516,7 +516,7 @@ def video(img_name_list,duration,directory,audiofile,transition,audio_duration,d
     concatenate_audio_moviepy(audiofile,"out.mp3")
     audio_file=AudioFileClip("out.mp3")
     video_clip = video_clip.set_audio(audio_file.subclip(0, video_clip.duration))
-    video_clip.write_videofile("static/video.mp4", fps=24, codec="libx264", timeout=1000)
+    video_clip.write_videofile("static/video.mp4", fps=24)
     os.remove("out.mp3")
     for i in audiofile:
         os.remove(i)
